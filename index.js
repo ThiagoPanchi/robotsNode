@@ -1,9 +1,17 @@
 const readline = require('readline-sync');
-function start() {
+const robots = {
+  //userInput: require('./robots/user-input.js'),
+  text: require('./robots/text')
+}
+async function start() {
   const content = {}
+
 
   content.searchTerm = askAndReturnSearchTerm();
   content.prefix = askAndReturnPrefix();
+
+  //robots.userInput(content);
+  await robots.text(content);
   
   function askAndReturnSearchTerm() {
     return readline.question('Type a wikipedia search term: ')
