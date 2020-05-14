@@ -1,4 +1,4 @@
-const algorithmia = require("algorithmia");
+const algorithmia = require('algorithmia');
 const algorithmiaApiKey = require('../credentials/algorithmia.json').apiKey;
 const algorithmiaLang = require('../credentials/algorithmia.json').lang;
 const sentenceBoundaryDetection = require('sbd');
@@ -6,22 +6,28 @@ const sentenceBoundaryDetection = require('sbd');
 const watsonApiKey = require('../credentials/watson-nlu.json').apikey;
 const NaturalLanguageUnderstandingV1 = require('watson-developer-cloud/natural-language-understanding/v1.js');
  
-var nlu = new NaturalLanguageUnderstandingV1({
+const nlu = new NaturalLanguageUnderstandingV1({
   iam_apikey: watsonApiKey,
   version: '2018-04-05',
   url: 'https://gateway.watsonplatform.net/natural-language-understanding/api/'
 });
 
-async function robot(content) {
+const state = require('./state');
+
+async function robot() {
+  const content = state.load();
+
   await fetchContentFromWikipedia(content);
   sanitizeContent(content);
   breakContentIntoSentences(content);
   limitMaximumSentences(content);
   await fetchKeywordOfAllSentences(content);
 
+  state.save(content);
+
   async function fetchContentFromWikipedia(content){
     const algorithmiaAuth = algorithmia(algorithmiaApiKey);
-    const wikipediaAlgorithm = algorithmiaAuth.algo("web/WikipediaParser/0.1.2?timeout=300");
+    const wikipediaAlgorithm = algorithmiaAuth.algo("web/WikipediaParser/0.1.2");
     const wikipediaResponse = await wikipediaAlgorithm.pipe({
       "lang":algorithmiaLang,
       "articleName":content.searchTerm
@@ -34,7 +40,8 @@ async function robot(content) {
   async function sanitizeContent(content) {
     const withoutBlankLinesAndMarkdown = removeBlankLinesAndMarkdown(content.sourceContentOriginal);
     const withoutDatesInParentheses =  removeDatesInParentheses(withoutBlankLinesAndMarkdown);
-    content.sourceContentSanitized = withoutDatesInParentheses;
+      content.sourceContentSanitized = withoutDatesInParentheses;
+    
     function removeBlankLinesAndMarkdown(text) {
       const allLines = text.split('\n');
         const withoutBlankLinesAndMarkdown = allLines.filter((line) => {
@@ -50,7 +57,8 @@ async function robot(content) {
     }
   }
   function breakContentIntoSentences(content) {
-    content.sentences = []
+    content.sentences = [];
+
     const sentences = sentenceBoundaryDetection.sentences(content.sourceContentSanitized);
     sentences.forEach((sentences) => {
       content.sentences.push({
