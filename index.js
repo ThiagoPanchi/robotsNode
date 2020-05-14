@@ -4,7 +4,9 @@ const robots = {
   text: require('./robots/text')
 }
 async function start() {
-  const content = {}
+  const content = {
+    maximumSentences: 7
+  }
 
 
   content.searchTerm = askAndReturnSearchTerm();
@@ -23,7 +25,7 @@ async function start() {
     return selectedPrefixText;
 
   }
-  console.log(content)
+  console.log(JSON.stringify(content.sentences, null, 4));
 }
 
 start();
